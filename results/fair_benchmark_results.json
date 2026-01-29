@@ -1,0 +1,19 @@
+{
+  "run_id": "20260129_172234",
+  "timestamp": "2026-01-29T17:27:11.370604",
+  "model": "gpt-5.1",
+  "questions": 100,
+  "metrics": {
+    "quality_score": 0.69,
+    "volume_score": 0.81,
+    "attempted_rate": 0.84,
+    "accuracy_given_attempted": 0.9642857142857143,
+    "n_correct": 81,
+    "n_incorrect": 3,
+    "n_not_attempted": 16,
+    "penalty_ratio": 4.0,
+    "avg_latency_ms": 1177.7127027511597,
+    "avg_tokens": 2232.24,
+    "total_time_s": 277.1996123790741
+  }
+}
