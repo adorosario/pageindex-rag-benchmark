@@ -1,6 +1,6 @@
 # PageIndex RAG Benchmark
 
-Independent benchmark comparing [PageIndex](https://github.com/VectifyAI/PageIndex) tree-based RAG against Google Gemini, CustomGPT, and OpenAI RAG on [SimpleQA-Verified](https://github.com/openai/simple-evals) (100 factual questions, ~1000 source documents).
+Independent benchmark comparing [PageIndex](https://github.com/VectifyAI/PageIndex) tree-based RAG against Google Gemini, CustomGPT, and OpenAI RAG on [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) (100 factual questions, ~1000 source documents).
 
 ## Results
 
@@ -15,9 +15,7 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 | **PageIndex (multi-doc)*** | **0.69** | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
-**Quality Score** = (correct - 4 x incorrect) / 100
-
-**Quality Score** = (correct - 4 x incorrect) / 100. The 4x penalty is a design choice that favors precision over recall.
+**Quality Score** = (correct - 4 x incorrect) / total. The 4x penalty is a design choice that favors precision over recall.
 
 *\*PageIndex tree-based reasoning could not be used in this multi-document benchmark because building tree indices for ~1000 documents was impractical (2-5 min per doc via LLM calls). This tests PageIndex's FAISS vector search fallback + GPT-5.1 answer generation.*
 
@@ -29,20 +27,20 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 
 3. **Scalability is the core limitation**: PageIndex's strength (tree reasoning) can't scale to multi-document scenarios. Building tree indices for 1000 docs takes 33-83 hours of LLM calls.
 
-4. **PageIndex is designed for single-document QA**: In their own words, PageIndex is "designed for single long document question answering." In a separate single-doc test with pre-identified documents, PageIndex achieved 0.89 quality with 0 incorrect answers.
+4. **PageIndex is designed for single-document QA**: PageIndex's team has noted that it is currently designed for single long document question answering. Its tree-based reasoning excels in that scenario.
 
 ## Methodology
 
 ### Dataset
-- **100 questions** from SimpleQA-Verified (factual Q&A with verified source documents)
+- **100 questions** from [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) (factual Q&A with verified source documents)
 - **~1000 source documents** indexed in a FAISS vector store (969 unique docs, 81,868 chunks)
 - Questions span topics: Science, History, Geography, Sports, Music, Politics, Art, TV shows
 
 ### Evaluation Pipeline
 - **Retrieval**: FAISS vector search (text-embedding-3-small) -> top 5 documents -> top 10 chunks per doc
 - **Answer generation**: GPT-5.1 (temperature=0) with retrieved context
-- **Judge**: GPT-4.1-mini using the [simple-evals grader template](https://github.com/openai/simple-evals)
-- **Scoring**: Quality = (correct - 4 x incorrect) / total
+- **Judge**: GPT-4.1-mini using the [simple-evals grader template](https://github.com/openai/simple-evals) (adapted for JSON output)
+- **Scoring**: Quality = (correct - 4 x incorrect) / total (penalty_ratio=4.0)
 
 ### Comparison Fairness
 
@@ -101,7 +99,7 @@ Results are saved to `runs/fair_benchmark_<timestamp>/`.
 2. Uses LLM reasoning to navigate the tree and find relevant sections
 3. Extracts content from the identified sections
 
-This approach excels at **within-document search** (finding specific information in a known document). For their FinanceBench evaluation, PageIndex achieved 98.7% accuracy on financial document QA.
+This approach excels at **within-document search** (finding specific information in a known document). VectifyAI's [Mafin 2.5](https://github.com/VectifyAI/Mafin2.5-FinanceBench), powered by PageIndex, achieved 98.7% accuracy on FinanceBench for financial document QA.
 
 However, in a **multi-document scenario** (finding which document among 1000 contains the answer), PageIndex must first do vector retrieval to identify candidate documents -- the same approach as traditional RAG. The tree-based reasoning only helps after the right document is found.
 
@@ -112,5 +110,5 @@ This benchmark was conducted independently by [Alden Do Rosario](https://github.
 ## Attribution
 
 - [PageIndex](https://github.com/VectifyAI/PageIndex) by VectifyAI
-- [SimpleQA](https://github.com/openai/simple-evals) by OpenAI
+- [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) by Google DeepMind (based on OpenAI's [SimpleQA](https://github.com/openai/simple-evals))
 - See [ATTRIBUTION.md](ATTRIBUTION.md) for full credits

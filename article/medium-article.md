@@ -4,7 +4,7 @@
 
 ---
 
-A viral tweet recently claimed that PageIndex, a new open-source "reasoning-based RAG" system, achieved 98.7% accuracy on a financial benchmark without vector databases, chunking, or similarity search. The AI community took notice. Some called it a "RAG killer."
+A viral tweet recently claimed that [PageIndex](https://github.com/VectifyAI/PageIndex), a new open-source "reasoning-based RAG" system, achieved 98.7% accuracy on a financial benchmark without vector databases, chunking, or similarity search. The AI community took notice. Some called it a "RAG killer."
 
 I spent the past week trying to benchmark PageIndex against leading RAG providers. The results tell a more nuanced story -- and reveal a fundamental limitation that no one is talking about.
 
@@ -20,23 +20,19 @@ I spent the past week trying to benchmark PageIndex against leading RAG provider
 
 The idea is compelling: similarity search finds *similar* content, but reasoning finds *relevant* content. When a question asks for a certification *date*, similarity search might return a certifications *table* -- related but useless. Tree-based reasoning can navigate to the timeline section instead.
 
-PageIndex's 98.7% accuracy on FinanceBench is real. But FinanceBench tests single-document question answering -- each question targets a specific financial report. The question is: **what happens when you have 1000 documents?**
+VectifyAI's Mafin 2.5, powered by PageIndex, [achieved 98.7% accuracy on FinanceBench](https://github.com/VectifyAI/Mafin2.5-FinanceBench). But FinanceBench tests single-document question answering -- each question targets a specific financial report. The question is: **what happens when you have 1000 documents?**
 
 ---
 
 ## The Scalability Problem
 
-Here's what I discovered after days of trying: **PageIndex's tree-based approach cannot practically scale to multi-document scenarios.**
+Here's what I confirmed through testing: **PageIndex's tree-based approach cannot practically scale to multi-document scenarios.**
 
-Building a tree index takes 2-5 minutes per document via LLM calls. For 1000 documents, that's 33-83 hours of indexing time. I managed to build trees for about 100 documents before hitting practical limits (cost, time, API rate limits, parsing failures on large documents).
+In our testing, building a tree index takes 2-5 minutes per document via LLM calls. For 1000 documents, that's 33-83 hours of indexing time. I managed to build trees for about 100 documents before hitting practical limits (cost, time, API rate limits, parsing failures on large documents).
 
 This means that in a real multi-document scenario, PageIndex can't use its core technology (tree reasoning). Instead, it falls back to standard vector search -- the same approach it claims to replace.
 
-When I shared this finding on X (Twitter), PageIndex's official account confirmed:
-
-> "It is now designed for single long document question answering, for multiple documents (more than 5), we support via other customized techniques."
-
-> "The open-source version currently uses a sequential indexing process, which can be slow for long documents. It's intended more as a proof of concept than an enterprise-ready system."
+PageIndex's team has been transparent about this. In a public exchange on X (Twitter), their official account noted that PageIndex is currently designed for single long document question answering, and that for multiple documents (more than 5), they support via other customized techniques. They also acknowledged that the open-source version uses a sequential indexing process intended more as a proof of concept than an enterprise-ready system.
 
 ---
 
@@ -44,11 +40,11 @@ When I shared this finding on X (Twitter), PageIndex's official account confirme
 
 To evaluate PageIndex in a multi-document scenario, I tested what actually happens at scale: FAISS vector retrieval (the fallback when tree indices aren't available) followed by GPT-5.1 answer generation.
 
-I compared this against three commercial RAG providers, all answering the same 100 questions from [SimpleQA-Verified](https://github.com/openai/simple-evals) across ~1000 source documents:
+I compared this against three commercial RAG providers, all answering the same 100 questions from [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) across ~1000 source documents:
 
 | Provider | Retrieval Method |
 |----------|-----------------|
-| Google Gemini RAG | Gemini-3-Pro with native grounding |
+| Google Gemini RAG | Gemini 3 Pro with native grounding |
 | CustomGPT RAG | Proprietary RAG pipeline |
 | PageIndex (multi-doc) | FAISS vector search + GPT-5.1 (no tree reasoning)* |
 | OpenAI RAG | GPT-5.1 with File Search API |
@@ -57,7 +53,7 @@ I compared this against three commercial RAG providers, all answering the same 1
 
 ### Scoring
 
-Quality = (correct - 4 x incorrect) / 100
+Quality = (correct - 4 x incorrect) / total
 
 The 4x penalty for incorrect answers reflects a design choice that favors precision over recall: a confident wrong answer costs four times as much as a correct answer earns. This benefits conservative systems that abstain when uncertain. With a different penalty ratio, rankings would change.
 
@@ -83,13 +79,13 @@ When the pipeline does answer, it achieves **96.4% accuracy** (81 out of 84 atte
 
 ---
 
-## The Two-Speed Story
+## The Core Trade-off
 
 These results reveal a fundamental trade-off in PageIndex's design:
 
-### Single-Document: Excellent
+### Single-Document: Designed to Excel
 
-When PageIndex can use its tree-based reasoning on a known document, it achieves outstanding results. In a separate test where I pre-identified the correct document for each question, PageIndex scored **0.89 quality** with **0 incorrect answers**. The tree navigation genuinely finds information that similarity search misses.
+PageIndex is built for single-document deep analysis. When it can use tree-based reasoning on a known document, the structural navigation genuinely finds information that similarity search misses. PageIndex's own FinanceBench results demonstrate this capability.
 
 ### Multi-Document: Falls Back to Standard RAG
 
@@ -131,12 +127,21 @@ Full benchmark code, data, and results are published at:
 **[github.com/adorosario/pageindex-rag-benchmark](https://github.com/adorosario/pageindex-rag-benchmark)**
 
 ### Technical Details
-- **Questions**: 100 from SimpleQA-Verified (factual, single-answer)
+- **Questions**: 100 from [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) (factual, single-answer)
 - **Documents**: ~1000 indexed in FAISS (text-embedding-3-small, 81,868 chunks)
 - **Answer model**: GPT-5.1 (temperature=0) for PageIndex fallback pipeline; each commercial provider uses its native model
 - **Judge**: GPT-4.1-mini using the [simple-evals grader template](https://github.com/openai/simple-evals)
 - **Scoring**: Quality = (correct - 4 x incorrect) / total (penalty_ratio=4.0)
-- **Note**: The 4x penalty ratio is a design choice that favors precision-oriented systems. With a 2x penalty, OpenAI RAG would score 0.72 and PageIndex would score 0.75, changing the rankings.
+- **Note**: The 4x penalty ratio is a design choice that favors precision-oriented systems. Rankings change under different penalty ratios:
+
+| Provider | 1x Penalty | 2x Penalty | 4x Penalty (used) |
+|----------|:----------:|:----------:|:------------------:|
+| Google Gemini RAG | 0.96 | 0.94 | **0.90** |
+| CustomGPT RAG | 0.84 | 0.82 | 0.78 |
+| PageIndex (multi-doc) | 0.78 | 0.75 | 0.69 |
+| OpenAI RAG | 0.81 | 0.72 | 0.54 |
+
+At 1x penalty (no extra punishment for wrong answers), OpenAI RAG (0.81) would rank 3rd ahead of PageIndex (0.78).
 
 ### Limitations
 - **Sample size**: 100 questions is statistically limited
