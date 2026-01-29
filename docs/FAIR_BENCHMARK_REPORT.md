@@ -1,132 +1,106 @@
 # PageIndex Fair Multi-Document RAG Benchmark Report
 
-**Date:** January 26, 2026
-**Run ID:** 20260126_043117
+**Date:** January 29, 2026
+**Run ID:** 20260129_172234
 
 ## Executive Summary
 
-This report presents results from a **fair comparison** between PageIndex and other RAG providers on the SimpleQA benchmark. Unlike previous benchmarks where PageIndex was "spoon-fed" the correct document, this test requires PageIndex to search across **all 1,000 documents** to find relevant information.
+This report presents results from a **fair multi-document comparison** between PageIndex's fallback pipeline and commercial RAG providers on the SimpleQA-Verified benchmark.
 
-### Key Finding
+### Important Note
 
-When PageIndex must discover which document is relevant (like other RAG providers do), its quality score drops significantly:
+PageIndex's core technology (tree-based reasoning) was **not used** in this benchmark because building tree indices for ~1000 documents was impractical (2-5 minutes per document via LLM calls). Instead, this benchmark tests what happens when PageIndex falls back to standard FAISS vector retrieval -- which is the realistic scenario for multi-document RAG at scale.
+
+### Results
 
 | Provider | Quality Score | Correct | Incorrect | Not Attempted |
-|----------|--------------|---------|-----------|---------------|
+|----------|:------------:|:-------:|:---------:|:-------------:|
 | Google Gemini RAG | **0.90** | 98 | 2 | 0 |
-| PageIndex (spoon-fed)* | 0.89 | 89 | 0 | 11 |
 | CustomGPT RAG | 0.78 | 86 | 2 | 12 |
+| PageIndex (multi-doc) | 0.69 | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
-| **PageIndex Fair** | **0.49** | **69** | **5** | **26** |
 
-*Previous benchmark where PageIndex was given the correct document
+Quality Score = (correct - 4 x incorrect) / 100
 
 ## Methodology
 
-### What Changed: Fair Multi-Document Search
+### Corpus
+- **969 unique documents** indexed in FAISS vector store
+- **81,868 chunks** embedded with text-embedding-3-small
+- Documents sourced from SimpleQA-Verified source URLs
 
-**Previous (Unfair) Approach:**
-- For each question, we pre-downloaded the specific URLs listed in SimpleQA
-- PageIndex only had to search within 6-8 documents per question
-- The correct answer was always in one of those documents
+### Retrieval Pipeline (for PageIndex multi-doc entry)
+1. **Embedding**: Query embedded with text-embedding-3-small
+2. **FAISS Search**: Top 30 chunks retrieved by cosine similarity
+3. **Document Scoring**: Chunks grouped by document, scored with `DocScore = Σ ChunkScore / √n`
+4. **Context Building**: Top 5 documents, top 10 chunks per document (max 12,000 chars)
+5. **Answer Generation**: GPT-5.1 (temperature=0, max_completion_tokens=200)
+6. **Judging**: GPT-4.1-mini using simple-evals grader template
 
-**New (Fair) Approach:**
-- All 1,000 documents from SimpleQA were indexed
-- FAISS vector search finds relevant documents (no hints)
-- Two-stage retrieval pipeline:
-  1. Vector search → top 5 documents
-  2. Context building → top 3 chunks per document
-- Same questions, same judge, same scoring as other providers
+### Same Methodology Across Providers
+- **Same 100 questions** from benchmark_questions.csv
+- **Same judge model** (GPT-4.1-mini) for all evaluations
+- **Same scoring formula** (penalty_ratio=4.0)
+- **Same source documents** (~1000 docs from SimpleQA-Verified)
 
-### Technical Implementation
-
-1. **Corpus:** 1,000 markdown documents (converted from verified sources)
-2. **Embeddings:** OpenAI text-embedding-3-small (102,446 chunks total)
-3. **Vector Search:** FAISS IndexFlatIP with cosine similarity
-4. **Document Scoring:** PageIndex formula: `DocScore = (1/√(N+1)) × Σ ChunkScore(n)`
-5. **Answer Generation:** gpt-4.1-mini with retrieved context
-6. **Judge:** gpt-4.1-mini (same as other benchmarks)
-7. **Scoring:** Quality Score = (Correct - 4 × Incorrect) / 100
+### What Differs
+- Each provider uses its **own retrieval method** and **own answer model**
+- This is an **end-to-end provider comparison**
 
 ## Results Analysis
 
-### Why the Lower Score?
+### Accuracy When Attempted
+| Provider | Attempted | Accuracy |
+|----------|:---------:|:--------:|
+| Google Gemini RAG | 100% | 98.0% |
+| PageIndex (multi-doc) | 84% | 96.4% |
+| CustomGPT RAG | 88% | 97.7% |
+| OpenAI RAG | 99% | 90.9% |
 
-| Metric | PageIndex Fair | Google Gemini |
-|--------|----------------|---------------|
-| Correct | 69 | 98 |
-| Incorrect | 5 | 2 |
-| Not Attempted | **26** | 0 |
-| Accuracy (attempted) | 93.24% | 98.0% |
+When PageIndex does answer, it achieves excellent accuracy (96.4%). The limitation is abstention: 16% of questions were not attempted.
 
-The main issue is the **high abstention rate (26%)**:
-- When PageIndex finds and uses the right context, accuracy is excellent (93%)
-- But in 26% of cases, the retrieval fails to find useful context
-- The model correctly says "I don't know" instead of guessing
+### Abstention Analysis
 
-### What This Means
-
-1. **Retrieval is the bottleneck**: The two-stage retrieval doesn't always surface the right document from 1,000 options
-
-2. **Accuracy when attempted is good**: 93.24% accuracy shows the PageIndex approach works well when the right document is found
-
-3. **Honest calibration**: High abstention is better than confident wrong answers (only 5 incorrect vs OpenAI RAG's 9)
-
-## Comparison Context
-
-### Provider Architectures
-
-| Provider | Document Count | Retrieval Method |
-|----------|----------------|------------------|
-| Google Gemini RAG | 1,000+ | Proprietary grounding |
-| CustomGPT RAG | 1,000+ | Proprietary retrieval |
-| OpenAI RAG | 1,000+ | File Search API |
-| **PageIndex Fair** | **1,000** | **FAISS + chunk ranking** |
+The 16 NOT_ATTEMPTED results fall into:
+- **Retrieval failure (3)**: FAISS search did not surface the correct document
+- **Context extraction failure (13)**: Correct document retrieved, but answer not in extracted chunks
 
 ### Cost Comparison
 
-| Provider | Cost per Request |
-|----------|------------------|
+| Provider | Estimated Cost per Query |
+|----------|:------------------------:|
 | Google Gemini RAG | $0.002 |
-| PageIndex Fair | ~$0.01 (embedding + generation) |
-| CustomGPT RAG | $0.10 |
+| PageIndex (multi-doc) | ~$0.01 |
 | OpenAI RAG | $0.02 |
+| CustomGPT RAG | $0.10 |
 
-## Recommendations
+## Historical Context
 
-### If High Accuracy is Critical
+### Previous Run (Jan 26, 2026)
+- **Model**: gpt-4.1-mini (NOT gpt-5.1)
+- **Quality**: 0.49 (69 correct, 5 incorrect, 26 not attempted)
+- **Bug**: `two_stage_search.py` had a data structure mismatch (texts stored as list, accessed as dict)
 
-Use Google Gemini RAG (0.90 quality) or CustomGPT RAG (0.78 quality) for production multi-document RAG.
+### Current Run (Jan 29, 2026)
+- **Model**: gpt-5.1
+- **Quality**: 0.69 (81 correct, 3 incorrect, 16 not attempted)
+- **Fix**: Corrected text retrieval to use FAISS index alignment
 
-### If PageIndex is Required
+The improvement from 0.49 to 0.69 is attributable to:
+1. Upgrading answer model from gpt-4.1-mini to gpt-5.1
+2. Fixing the text retrieval bug in two_stage_search.py
 
-For better performance with PageIndex on large document collections:
+## Files
 
-1. **Improve retrieval**: Consider hybrid search (BM25 + vector) or query expansion
-2. **Tune top-k**: Experiment with different chunk retrieval counts
-3. **Better chunking**: Semantic chunking instead of fixed character splits
-4. **Use PageIndex trees**: Build hierarchical summaries for better document-level understanding
+- `results/fair_benchmark_results.json` - Summary metrics
+- `results/detailed_results.jsonl` - Per-question details
+- `data/benchmark_questions.csv` - 100 questions used
+- `data/provider_requests.jsonl` - All provider API calls (400 rows)
 
-### For Smaller Document Collections
+## Disclosure
 
-PageIndex excels when:
-- Document count is small (10-50 documents)
-- Documents can be pre-identified for the query
-- Hierarchical tree search can be used per-document
-
-## Files Generated
-
-- `/app/runs/fair_benchmark_20260126_043117/results.json` - Summary metrics
-- `/app/runs/fair_benchmark_20260126_043117/detailed_results.jsonl` - Per-question details
-- `/app/faiss_index/` - Vector index (102,446 chunks)
-- `/app/embeddings/embeddings_all.jsonl` - Raw embeddings
-
-## Conclusion
-
-The fair multi-document benchmark reveals that PageIndex's strength is **within-document search** using hierarchical trees, not **cross-document discovery**. When competing directly with other RAG providers on document retrieval, PageIndex's vector-based approach achieves lower quality scores (0.49 vs 0.54-0.90).
-
-This is an honest assessment. The previous benchmark showing 0.89 quality was misleading because PageIndex was given hints about which document to search.
+This benchmark was conducted independently by Alden Do Rosario, CEO of CustomGPT.ai. CustomGPT RAG is one of the evaluated providers. All data is published for transparency.
 
 ---
 
-*Generated by fair_benchmark.py on 2026-01-26*
+*Generated from fair_benchmark.py run 20260129_172234*

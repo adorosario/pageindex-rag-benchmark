@@ -12,22 +12,24 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 |----------|:------------:|:-------:|:---------:|:-------------:|
 | Google Gemini RAG | **0.90** | 98 | 2 | 0 |
 | CustomGPT RAG | 0.78 | 86 | 2 | 12 |
-| **PageIndex** | **0.69** | 81 | 3 | 16 |
+| **PageIndex (multi-doc)*** | **0.69** | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
 **Quality Score** = (correct - 4 x incorrect) / 100
 
-The 4x penalty for incorrect answers reflects real-world cost: a confident wrong answer is far worse than saying "I don't know."
+**Quality Score** = (correct - 4 x incorrect) / 100. The 4x penalty is a design choice that favors precision over recall.
+
+*\*PageIndex tree-based reasoning could not be used in this multi-document benchmark because building tree indices for ~1000 documents was impractical (2-5 min per doc via LLM calls). This tests PageIndex's FAISS vector search fallback + GPT-5.1 answer generation.*
 
 ### Key Findings
 
-1. **PageIndex places 3rd**: Quality score of 0.69, ahead of OpenAI RAG (0.54), behind Google Gemini (0.90) and CustomGPT (0.78).
+1. **PageIndex multi-doc places 3rd**: Quality score of 0.69, ahead of OpenAI RAG (0.54), behind Google Gemini (0.90) and CustomGPT (0.78).
 
-2. **Low error rate**: Only 3 incorrect answers out of 100. When PageIndex answers, it achieves **96.4% accuracy**.
+2. **96.4% accuracy when answering**: Only 3 incorrect answers out of 84 attempted. The pipeline prefers to abstain rather than guess wrong.
 
-3. **Abstention trade-off**: 16% of questions resulted in "I don't know" responses. PageIndex prefers to abstain rather than guess wrong.
+3. **Scalability is the core limitation**: PageIndex's strength (tree reasoning) can't scale to multi-document scenarios. Building tree indices for 1000 docs takes 33-83 hours of LLM calls.
 
-4. **PageIndex is designed for single-document QA**: In their own words, PageIndex is "designed for single long document question answering." Multi-document retrieval across 1000 docs is not its primary use case.
+4. **PageIndex is designed for single-document QA**: In their own words, PageIndex is "designed for single long document question answering." In a separate single-doc test with pre-identified documents, PageIndex achieved 0.89 quality with 0 incorrect answers.
 
 ## Methodology
 
