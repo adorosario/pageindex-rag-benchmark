@@ -68,6 +68,8 @@ The 4x penalty for incorrect answers reflects a design choice that favors precis
 | PageIndex (multi-doc) | 0.69 | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
+**Note:** These results are based on a 100-question sample from SimpleQA-Verified, not the full 1,000-question benchmark. With this sample size, the rankings should be treated as directional indicators rather than statistically definitive. The difference between adjacent providers (e.g., CustomGPT at 0.78 vs PageIndex at 0.69) may not be statistically significant at n=100.
+
 PageIndex's multi-document fallback places **third** with a quality score of 0.69 -- ahead of OpenAI RAG but behind Google Gemini and CustomGPT.
 
 The 16 "Not Attempted" answers break down into:
@@ -144,7 +146,7 @@ Full benchmark code, data, and results are published at:
 At 1x penalty (no extra punishment for wrong answers), OpenAI RAG (0.81) would rank 3rd ahead of PageIndex (0.78).
 
 ### Limitations
-- **Sample size**: 100 questions is statistically limited
+- **Sample size**: This benchmark uses 100 questions from the 1,000-question SimpleQA-Verified dataset. Results are directional indicators, not statistically definitive -- differences between adjacent providers may not be significant at this sample size
 - **PageIndex tree reasoning was not used** in the multi-document benchmark because building tree indices for 1000 documents was impractical
 - **Each provider uses its own answer model**, making this an end-to-end provider comparison rather than a retrieval-only comparison
 - **I designed the benchmark methodology** and selected the providers, scoring formula, and penalty ratio

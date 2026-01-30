@@ -19,6 +19,8 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 
 *\*PageIndex tree-based reasoning could not be used in this multi-document benchmark because building tree indices for ~1000 documents was impractical (2-5 min per doc via LLM calls). This tests PageIndex's FAISS vector search fallback + GPT-5.1 answer generation.*
 
+**Note:** These results are based on a 100-question sample from the 1,000-question SimpleQA-Verified benchmark. Rankings should be treated as directional indicators rather than statistically definitive.
+
 ### Key Findings
 
 1. **PageIndex multi-doc places 3rd**: Quality score of 0.69, ahead of OpenAI RAG (0.54), behind Google Gemini (0.90) and CustomGPT (0.78).

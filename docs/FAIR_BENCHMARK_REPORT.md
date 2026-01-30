@@ -22,6 +22,8 @@ PageIndex's core technology (tree-based reasoning) was **not used** in this benc
 
 Quality Score = (correct - 4 x incorrect) / total
 
+**Note:** These results are based on a 100-question sample from the 1,000-question SimpleQA-Verified benchmark, not the full dataset. Rankings should be treated as directional indicators rather than statistically definitive. Differences between adjacent providers may not be significant at this sample size.
+
 ## Methodology
 
 ### Corpus
