@@ -1,0 +1,11 @@
+services:
+  pageindex:
+    build: .
+    image: pageindex-benchmark:latest
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    working_dir: /app
+    stdin_open: true
+    tty: true
