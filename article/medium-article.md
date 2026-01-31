@@ -72,13 +72,13 @@ This benefits conservative systems that abstain when uncertain. With a different
 | Provider | Quality Score | Correct | Incorrect | Not Attempted |
 |----------|:------------:|:-------:|:---------:|:-------------:|
 | Google Gemini RAG | **0.90** | 98 | 2 | 0 |
-| CustomGPT RAG | 0.78 | 86 | 2 | 12 |
+| CustomGPT.ai RAG | 0.78 | 86 | 2 | 12 |
 | PageIndex (multi-doc) | 0.69 | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
-**Note:** These results are based on a 100-question sample from SimpleQA-Verified, not the full 1,000-question benchmark. With this sample size, the rankings should be treated as directional indicators rather than statistically definitive. The difference between adjacent providers (e.g., CustomGPT at 0.78 vs PageIndex at 0.69) may not be statistically significant at n=100.
+**Note:** These results are based on a 100-question sample from SimpleQA-Verified, not the full 1,000-question benchmark. With this sample size, the rankings should be treated as directional indicators rather than statistically definitive. The difference between adjacent providers (e.g., CustomGPT.ai at 0.78 vs PageIndex at 0.69) may not be statistically significant at n=100.
 
-PageIndex's multi-document fallback places **third** with a quality score of 0.69 -- ahead of OpenAI RAG but behind Google Gemini and CustomGPT.
+PageIndex's multi-document fallback places **third** with a quality score of 0.69 -- ahead of OpenAI RAG but behind Google Gemini and CustomGPT.ai.
 
 The 16 "Not Attempted" answers break down into:
 

@@ -24,7 +24,7 @@ from two_stage_search import TwoStageSearch
 # Configuration
 QUESTIONS_FILE = Path("/app/data/benchmark_questions.csv")  # Same 100 questions as other benchmark
 OUTPUT_DIR = Path("/app/runs")
-ANSWER_MODEL = "gpt-5.1"  # Same model as CustomGPT/OpenAI RAG benchmarks
+ANSWER_MODEL = "gpt-5.1"  # Same model as CustomGPT.ai/OpenAI RAG benchmarks
 JUDGE_MODEL = "gpt-4.1-mini"  # Same judge
 PENALTY_RATIO = 4.0
 

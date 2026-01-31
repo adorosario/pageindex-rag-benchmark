@@ -5,7 +5,7 @@ Two-stage retrieval pipeline for fair multi-document RAG benchmark.
 Stage 1: Vector search (FAISS) to find top-k relevant documents
 Stage 2: Retrieve best chunks from those documents for context
 
-This replicates what other RAG providers do (Gemini, CustomGPT, OpenAI RAG).
+This replicates what other RAG providers do (Gemini, CustomGPT.ai, OpenAI RAG).
 """
 
 import json

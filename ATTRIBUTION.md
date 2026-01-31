@@ -21,10 +21,10 @@ The benchmark questions are sourced from [SimpleQA-Verified](https://huggingface
 ## RAG Providers Evaluated
 
 - **Google Gemini RAG**: Gemini 3 Pro with native grounding
-- **CustomGPT RAG**: CustomGPT.ai RAG platform (GPT-5.1 via API)
+- **CustomGPT.ai RAG**: CustomGPT.ai RAG platform (GPT-5.1 via API)
 - **OpenAI RAG**: GPT-5.1 with File Search API
 - **PageIndex**: Open-source tree-based RAG with FAISS retrieval + GPT-5.1
 
 ## Disclosure
 
-This benchmark was conducted independently by [Alden Do Rosario](https://github.com/adorosario), CEO of [CustomGPT.ai](https://customgpt.ai). CustomGPT RAG is one of the evaluated providers. All providers were evaluated using the same methodology, judge model, and scoring formula. Full audit data is included in this repository for reproducibility.
+This benchmark was conducted independently by [Alden Do Rosario](https://github.com/adorosario), CEO of [CustomGPT.ai](https://customgpt.ai). CustomGPT.ai RAG is one of the evaluated providers. All providers were evaluated using the same methodology, judge model, and scoring formula. Full audit data is included in this repository for reproducibility.

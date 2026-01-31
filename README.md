@@ -1,6 +1,6 @@
 # PageIndex RAG Benchmark
 
-Independent benchmark comparing [PageIndex](https://github.com/VectifyAI/PageIndex) tree-based RAG against Google Gemini, CustomGPT, and OpenAI RAG on [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) (100 factual questions, ~1000 source documents).
+Independent benchmark comparing [PageIndex](https://github.com/VectifyAI/PageIndex) tree-based RAG against Google Gemini, CustomGPT.ai, and OpenAI RAG on [SimpleQA-Verified](https://huggingface.co/datasets/google/simpleqa-verified) (100 factual questions, ~1000 source documents).
 
 ## Results
 
@@ -11,7 +11,7 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 | Provider | Quality Score | Correct | Incorrect | Not Attempted |
 |----------|:------------:|:-------:|:---------:|:-------------:|
 | Google Gemini RAG | **0.90** | 98 | 2 | 0 |
-| CustomGPT RAG | 0.78 | 86 | 2 | 12 |
+| CustomGPT.ai RAG | 0.78 | 86 | 2 | 12 |
 | **PageIndex (multi-doc)*** | **0.69** | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
@@ -23,7 +23,7 @@ All providers search the same ~1000 documents to answer 100 factual questions. N
 
 ### Key Findings
 
-1. **PageIndex multi-doc places 3rd**: Quality score of 0.69, ahead of OpenAI RAG (0.54), behind Google Gemini (0.90) and CustomGPT (0.78).
+1. **PageIndex multi-doc places 3rd**: Quality score of 0.69, ahead of OpenAI RAG (0.54), behind Google Gemini (0.90) and CustomGPT.ai (0.78).
 
 2. **96.4% accuracy when answering**: Only 3 incorrect answers out of 84 attempted. The pipeline prefers to abstain rather than guess wrong.
 
@@ -107,7 +107,7 @@ However, in a **multi-document scenario** (finding which document among 1000 con
 
 ## Disclosure
 
-This benchmark was conducted independently by [Alden Do Rosario](https://github.com/adorosario), CEO of [CustomGPT.ai](https://customgpt.ai). CustomGPT RAG is one of the evaluated providers. All methodology, data, and results are published here for transparency.
+This benchmark was conducted independently by [Alden Do Rosario](https://github.com/adorosario), CEO of [CustomGPT.ai](https://customgpt.ai). CustomGPT.ai RAG is one of the evaluated providers. All methodology, data, and results are published here for transparency.
 
 ## Attribution
 

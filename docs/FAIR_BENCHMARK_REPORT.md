@@ -16,7 +16,7 @@ PageIndex's core technology (tree-based reasoning) was **not used** in this benc
 | Provider | Quality Score | Correct | Incorrect | Not Attempted |
 |----------|:------------:|:-------:|:---------:|:-------------:|
 | Google Gemini RAG | **0.90** | 98 | 2 | 0 |
-| CustomGPT RAG | 0.78 | 86 | 2 | 12 |
+| CustomGPT.ai RAG | 0.78 | 86 | 2 | 12 |
 | PageIndex (multi-doc) | 0.69 | 81 | 3 | 16 |
 | OpenAI RAG | 0.54 | 90 | 9 | 1 |
 
@@ -56,7 +56,7 @@ Quality Score = (correct - 4 x incorrect) / total
 |----------|:---------:|:--------:|
 | Google Gemini RAG | 100% | 98.0% |
 | PageIndex (multi-doc) | 84% | 96.4% |
-| CustomGPT RAG | 88% | 97.7% |
+| CustomGPT.ai RAG | 88% | 97.7% |
 | OpenAI RAG | 99% | 90.9% |
 
 When PageIndex does answer, it achieves excellent accuracy (96.4%). The limitation is abstention: 16% of questions were not attempted.
@@ -74,7 +74,7 @@ The 16 NOT_ATTEMPTED results fall into:
 | Google Gemini RAG | $0.002 |
 | PageIndex (multi-doc) | ~$0.01 |
 | OpenAI RAG | $0.02 |
-| CustomGPT RAG | $0.10 |
+| CustomGPT.ai RAG | $0.10 |
 
 ## Historical Context
 
@@ -95,7 +95,7 @@ The improvement from 0.49 to 0.69 is attributable to:
 ## Data Notes
 
 ### Provider Judgment Reproducibility
-The `data/provider_requests.jsonl` file contains raw API request/response logs for all 4 providers (400 rows). Judgment verdicts (CORRECT/INCORRECT/NOT_ATTEMPTED) for Google Gemini, CustomGPT, and OpenAI RAG were computed using the same GPT-4.1-mini judge and grading prompt as the PageIndex pipeline. To reproduce these judgments, run the judge prompt from `scripts/fair_benchmark.py` against each provider's response and the expected answer from `data/benchmark_questions.csv`.
+The `data/provider_requests.jsonl` file contains raw API request/response logs for all 4 providers (400 rows). Judgment verdicts (CORRECT/INCORRECT/NOT_ATTEMPTED) for Google Gemini, CustomGPT.ai, and OpenAI RAG were computed using the same GPT-4.1-mini judge and grading prompt as the PageIndex pipeline. To reproduce these judgments, run the judge prompt from `scripts/fair_benchmark.py` against each provider's response and the expected answer from `data/benchmark_questions.csv`.
 
 PageIndex per-question judgments are included in `results/detailed_results.jsonl`.
 
@@ -114,7 +114,7 @@ All 16 NOT_ATTEMPTED results in the PageIndex run were legitimate abstentions (t
 
 ## Disclosure
 
-This benchmark was conducted independently by Alden Do Rosario, CEO of CustomGPT.ai. CustomGPT RAG is one of the evaluated providers. All data is published for transparency.
+This benchmark was conducted independently by Alden Do Rosario, CEO of CustomGPT.ai. CustomGPT.ai RAG is one of the evaluated providers. All data is published for transparency.
 
 ---
 
