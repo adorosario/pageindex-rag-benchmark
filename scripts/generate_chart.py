@@ -34,11 +34,11 @@ for bar, score, c, i, n in zip(bars, scores, correct, incorrect, not_attempted):
 # Styling
 ax.set_xlim(0, 1.18)
 ax.set_xlabel('Quality Score  =  (correct − 4 × incorrect) / total', fontsize=12, color='#555555', labelpad=10)
-ax.set_title('RAG Provider Benchmark: 100 Questions, ~1000 Documents',
-             fontsize=16, fontweight='bold', pad=15, color='#333333')
+ax.set_title('RAG Provider Benchmark: 100 Questions, 2,795 Documents',
+             fontsize=16, fontweight='bold', pad=30, color='#333333')
 
 # Subtitle
-ax.text(0.5, 1.02, 'SimpleQA-Verified · 100-question sample · directional results',
+ax.text(0.5, 1.04, 'SimpleQA-Verified · 100-question sample · directional results',
         transform=ax.transAxes, ha='center', fontsize=10, color='#999999', style='italic')
 
 # Clean up axes
