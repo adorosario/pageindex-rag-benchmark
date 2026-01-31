@@ -4,7 +4,7 @@
 
 ---
 
-A viral tweet recently claimed that [PageIndex](https://github.com/VectifyAI/PageIndex), a new open-source "reasoning-based RAG" system, achieved 98.7% accuracy on a financial benchmark without vector databases, chunking, or similarity search. The AI community took notice. Some called it a "RAG killer."
+A [viral tweet from Avi Chawla](https://x.com/_avichawla/status/1882365488498393262) recently claimed that a new RAG approach "does not need a vector DB, does not embed data, involves no chunking, performs no similarity search — and it hit 98.7% accuracy on a financial benchmark (SOTA)." The system in question: [PageIndex](https://github.com/VectifyAI/PageIndex), an open-source "reasoning-based RAG" by VectifyAI. The AI community took notice. Some called it a "RAG killer."
 
 I spent the past week trying to benchmark PageIndex against leading RAG providers. The results tell a more nuanced story -- and reveal a fundamental limitation that no one is talking about.
 
@@ -18,9 +18,13 @@ I spent the past week trying to benchmark PageIndex against leading RAG provider
 2. Uses **LLM reasoning** to navigate the tree and find relevant sections
 3. Extracts content from identified sections for answer generation
 
-The idea is compelling: similarity search finds *similar* content, but reasoning finds *relevant* content. When a question asks for a certification *date*, similarity search might return a certifications *table* -- related but useless. Tree-based reasoning can navigate to the timeline section instead.
+The idea is compelling: similarity search finds *similar* content, but reasoning finds *relevant* content. 
 
-VectifyAI's Mafin 2.5, powered by PageIndex, [achieved 98.7% accuracy on FinanceBench](https://github.com/VectifyAI/Mafin2.5-FinanceBench). But FinanceBench tests single-document question answering -- each question targets a specific financial report. The question is: **what happens when you have 1000 documents?**
+When a question asks for a certification *date*, similarity search might return a certifications *table* -- related but useless. Tree-based reasoning can navigate to the timeline section instead.
+
+VectifyAI's Mafin 2.5, powered by PageIndex, [achieved 98.7% accuracy on FinanceBench](https://github.com/VectifyAI/Mafin2.5-FinanceBench). But FinanceBench tests single-document question answering -- each question targets a specific financial report. 
+
+The question is: **what happens when you have 1000 documents?**
 
 ---
 
@@ -28,11 +32,15 @@ VectifyAI's Mafin 2.5, powered by PageIndex, [achieved 98.7% accuracy on Finance
 
 Here's what I confirmed through testing: **PageIndex's tree-based approach cannot practically scale to multi-document scenarios.**
 
-In our testing, building a tree index takes 2-5 minutes per document via LLM calls. For 1000 documents, that's 33-83 hours of indexing time. I managed to build trees for about 100 documents before hitting practical limits (cost, time, API rate limits, parsing failures on large documents).
+It's great for single-document use cases (for example: Financial documents), but falls short on large multi-document knowledgebases. 
 
-This means that in a real multi-document scenario, PageIndex can't use its core technology (tree reasoning). Instead, it falls back to standard vector search -- the same approach it claims to replace.
+In our testing using Google's simpleqa-verified dataset (a 1000-question benchmark dataset that has about 2795 documents ), building the index ran into major scalability problems. 
 
-PageIndex's team has been transparent about this. In a public exchange on X (Twitter), their official account noted that PageIndex is currently designed for single long document question answering, and that for multiple documents (more than 5), they support via other customized techniques. They also acknowledged that the open-source version uses a sequential indexing process intended more as a proof of concept than an enterprise-ready system.
+Due to which: We had to fall back to standard vector search -- the same approach it claims to replace.
+
+PageIndex's team has been transparent about this. In a [public exchange](https://x.com/PageIndexAI/status/2016913668114698341?s=20) on X (Twitter), their official account noted that PageIndex is currently designed for single long document question answering, and that for multiple documents (more than 5), they support via other customized techniques. 
+
+They also acknowledged that the open-source version uses a sequential indexing process intended more as a proof of concept than an enterprise-ready system.
 
 ---
 
@@ -45,17 +53,17 @@ I compared this against three commercial RAG providers, all answering the same 1
 | Provider | Retrieval Method |
 |----------|-----------------|
 | Google Gemini RAG | Gemini 3 Pro with native grounding |
-| CustomGPT RAG | Proprietary RAG pipeline |
-| PageIndex (multi-doc) | FAISS vector search + GPT-5.1 (no tree reasoning)* |
+| CustomGPT.ai RAG | Proprietary RAG pipeline |
+| PageIndex (multi-doc) | FAISS vector search + GPT-5.1 |
 | OpenAI RAG | GPT-5.1 with File Search API |
-
-*\*Tree-based reasoning could not be used because building tree indices for 1000 documents was impractical. This benchmark tests PageIndex's multi-document fallback.*
 
 ### Scoring
 
 Quality = (correct - 4 x incorrect) / total
 
-The 4x penalty for incorrect answers reflects a design choice that favors precision over recall: a confident wrong answer costs four times as much as a correct answer earns. This benefits conservative systems that abstain when uncertain. With a different penalty ratio, rankings would change.
+The 4x penalty for incorrect answers reflects a design choice that favors precision over recall: a confident wrong answer costs four times as much as a correct answer earns. 
+
+This benefits conservative systems that abstain when uncertain. With a different penalty ratio, rankings would change.
 
 ---
 
@@ -136,24 +144,16 @@ Full benchmark code, data, and results are published at:
 - **Scoring**: Quality = (correct - 4 x incorrect) / total (penalty_ratio=4.0)
 - **Note**: The 4x penalty ratio is a design choice that favors precision-oriented systems. Rankings change under different penalty ratios:
 
-| Provider | 1x Penalty | 2x Penalty | 4x Penalty (used) |
-|----------|:----------:|:----------:|:------------------:|
-| Google Gemini RAG | 0.96 | 0.94 | **0.90** |
-| CustomGPT RAG | 0.84 | 0.82 | 0.78 |
-| PageIndex (multi-doc) | 0.78 | 0.75 | 0.69 |
-| OpenAI RAG | 0.81 | 0.72 | 0.54 |
-
 At 1x penalty (no extra punishment for wrong answers), OpenAI RAG (0.81) would rank 3rd ahead of PageIndex (0.78).
 
 ### Limitations
 - **Sample size**: This benchmark uses 100 questions from the 1,000-question SimpleQA-Verified dataset. Results are directional indicators, not statistically definitive -- differences between adjacent providers may not be significant at this sample size
-- **PageIndex tree reasoning was not used** in the multi-document benchmark because building tree indices for 1000 documents was impractical
 - **Each provider uses its own answer model**, making this an end-to-end provider comparison rather than a retrieval-only comparison
-- **I designed the benchmark methodology** and selected the providers, scoring formula, and penalty ratio
+- **I designed the benchmark methodology** and selected the providers, scoring formula, and penalty ratio using techniques from OpenAI's recent "Why LLMs Hallucinate" paper [https://arxiv.org/abs/2509.04664](https://arxiv.org/abs/2509.04664) -- PS: Read the [blog post](https://openai.com/index/why-language-models-hallucinate/), its a must-read. 
 
 ### Disclosure
-I am the CEO of [CustomGPT.ai](https://customgpt.ai), one of the evaluated providers. CustomGPT places second in these results. I selected the providers, designed the benchmark methodology, and ran all evaluations. Full audit data is published for transparency so readers can verify the results independently.
+I am the Founder of [CustomGPT.ai](https://customgpt.ai), one of the evaluated providers. I selected the providers, designed the benchmark methodology, and ran all evaluations. Full audit data is published for transparency so readers can verify the results independently.
 
 ---
 
-*Alden Do Rosario is CEO of [CustomGPT.ai](https://customgpt.ai). The full benchmark code and results are available at [github.com/adorosario/pageindex-rag-benchmark](https://github.com/adorosario/pageindex-rag-benchmark).*
+*Alden Do Rosario is Founder of [CustomGPT.ai](https://customgpt.ai). The full benchmark code and results are available at [github.com/adorosario/pageindex-rag-benchmark](https://github.com/adorosario/pageindex-rag-benchmark).*
